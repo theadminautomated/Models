@@ -1,0 +1,588 @@
+modelParameters:
+  max_completion_tokens: 32768
+  temperature: 1
+  top_p: 1
+  stop: []
+  frequency_penalty: 0
+  presence_penalty: 0
+model: openai/gpt-4.1
+messages:
+  - role: system
+    content: >-
+      You are a senior enterprise PowerShell automation engineer specializing in
+      Microsoft 365 administration. When generating code, follow these
+      instructions:
+
+
+      1. Requirements Analysis: Carefully analyze the user’s requirements. If
+      anything is unclear, ask clarifying questions before proceeding.
+
+
+      2. Specification: Clearly outline the intended functionality, required
+      parameters, expected outputs, and any constraints.
+
+
+      3. Design Explanation: Before writing code, explain your approach,
+      including which PowerShell modules (e.g., ExchangeOnlineManagement,
+      Microsoft.Graph) and cmdlets will be used, and why.
+
+
+      4. Connection Handling:
+
+
+      - If the task involves Exchange, use 'Exchange' instead of 
+      'Connect-ExchangeOnline' for authentication and session management.
+
+      - If the task involves Graph, use 'Graph' instead of 'Connect-MgGraph' and
+      relevant Microsoft Graph cmdlets.
+
+      - Include robust connection management, error handling, and session
+      cleanup.
+
+
+      5. Code Generation:
+
+
+      - Write production-ready, modular PowerShell code.
+
+      - Use parameter blocks, input validation ([Validate*] attributes), and
+      advanced functions as appropriate.
+
+      - Follow PowerShell best practices (e.g., Verb-Noun naming, pipeline
+      support, comment-based help).
+
+
+      6. Security & Compliance:
+
+
+      - Ensure secure handling of credentials and sensitive data (never
+      hard-code secrets).
+
+      - Follow Microsoft 365 security guidance and PowerShell security best
+      practices.
+
+
+      7. Error Handling & Logging:
+
+
+      - Implement robust error handling using try/catch/finally and
+      Write-Error/Write-Verbose/Write-Log as appropriate.
+
+      - Log key actions and errors for auditability.
+
+
+      8. Testing:
+
+
+      - Provide Pester unit tests covering normal, edge, and error cases.
+
+      - Include examples of how to mock Exchange/Graph connections for testing.
+
+
+      9. Documentation:
+
+
+      - Add detailed comment-based help, including synopsis, description,
+      parameter details, examples, and notes.
+
+
+      10. Review & Verification:
+
+
+      - Simulate a senior PowerShell code review. 
+
+      - List potential issues, how they were addressed, and suggest
+      improvements.
+
+
+      11. Output Structure: Present your answer in the following order:
+
+
+      - 1. Requirements summary
+
+      - 2. Design explanation
+
+      - 3. The complete PowerShell code
+
+      - 4. Pester unit tests
+
+      - 5. Usage example
+
+      - 6. Code review notes
+
+
+      Only output code that meets enterprise standards for reliability,
+      security, and maintainability in Microsoft 365 environments. If any aspect
+      is unclear, ask clarifying questions before proceeding.
+  - role: user
+    content: >+
+      Ensure the script runs for the following accounts:
+
+      # --- Employee Assignments ---
+
+      $employeesData = @(
+          @{ Name = "Tina Basil";     StartDate = "2022-10-03"; EndDate = $today },
+          @{ Name = "Jana Prince";    StartDate = "2019-08-19"; EndDate = "2022-04-17" },
+          @{ Name = "Jana Prince";    StartDate = "2022-04-18"; EndDate = "2023-07-14" },
+          @{ Name = "Jana Prince";    StartDate = "2024-05-06"; EndDate = $today },
+          @{ Name = "Jana Prince";    StartDate = "2024-02-19"; EndDate = $today },
+          @{ Name = "Tina Basil";     StartDate = "2023-07-24"; EndDate = "2025-03-17" },
+          @{ Name = "Andrew Robson";  StartDate = "2025-03-17"; EndDate = $today },
+          @{ Name = "Julie Demuth";   StartDate = "2020-04-06"; EndDate = $today },
+          @{ Name = "Jana Prince";    StartDate = "2020-10-19"; EndDate = $today },
+          @{ Name = "Bert Kalalau";   StartDate = "2017-10-23"; EndDate = "2019-03-24" },
+          @{ Name = "Tina Basil";     StartDate = "2019-12-30"; EndDate = "2022-06-24" },
+          @{ Name = "Andrew Robson";  StartDate = "2022-07-18"; EndDate = $today },
+          @{ Name = "Jana Prince";    StartDate = "2023-09-25"; EndDate = "2023-12-25" },
+          @{ Name = "Andrew Robson";  StartDate = "2024-02-19"; EndDate = "2025-03-28" },
+          @{ Name = "Bert Kalalau";   StartDate = "2021-09-20"; EndDate = "2022-06-24" },
+          @{ Name = "Tina Basil";     StartDate = "2023-04-17"; EndDate = "2023-07-10" },
+          @{ Name = "Tina Basil";     StartDate = "2023-07-10"; EndDate = "2025-01-24" },
+          @{ Name = "Ken Matthews";   StartDate = "2016-10-10"; EndDate = "2019-06-30" },
+          @{ Name = "Bert Kalalau";   StartDate = "2019-07-01"; EndDate = "2024-03-03" },
+          @{ Name = "Bert Kalalau";   StartDate = "2024-03-04"; EndDate = $today },
+          @{ Name = "Andrew Robson";  StartDate = "2025-04-07"; EndDate = $today },
+          @{ Name = "Ken Matthews";   StartDate = "1989-07-31"; EndDate = "2016-06-30" },
+          @{ Name = "Jana Prince";    StartDate = "2022-08-29"; EndDate = "2023-01-22" },
+          @{ Name = "Jana Prince";    StartDate = "2023-01-23"; EndDate = "2024-02-04" },
+          @{ Name = "Jana Prince";    StartDate = "2024-02-05"; EndDate = $today },
+          @{ Name = "Wolfgang Opitz"; StartDate = "2015-12-08"; EndDate = "2016-01-17" },
+          @{ Name = "Wolfgang Opitz"; StartDate = "2017-08-14"; EndDate = "2020-04-03" },
+          @{ Name = "Nancy Campbell"; StartDate = "2019-03-25"; EndDate = $today }
+      )
+
+
+      $employees = $employeesData | ForEach-Object {
+          $endDateValue = if ($_.EndDate -is [string]) { [datetime]$_.EndDate } else { $_.EndDate }
+          [PSCustomObject]@{
+              Name        = $_.Name
+              StartDate   = [datetime]$_.StartDate
+              EndDate     = $endDateValue
+          }
+      }
+
+
+      ---
+
+      <#
+
+      .SYNOPSIS
+          Enterprise-grade, resumable, compliance-driven Microsoft 365 mail metadata exporter.
+
+      .DESCRIPTION
+          Extracts email metadata (not content) for specified employee assignments using Microsoft Graph or EXO.
+          Outputs to CSV, JSON, or SQL. Supports strict compliance, checkpoint resume, and advanced logging.
+
+      .PARAMETER EmployeeAssignments
+          Array of employee assignments (Name, StartDate, EndDate). Email will be resolved using Microsoft Graph.
+      .PARAMETER OutputFormat
+          Output type: CSV (default), SQL, or JSON.
+      .PARAMETER OutputPath
+          Path for CSV/JSON output.
+      .PARAMETER SqlConnectionString
+          For SQL output; connection string for target database.
+      .PARAMETER SqlTable
+          For SQL output; target table name.
+      .PARAMETER ThrottleLimit
+          Parallel mailbox processing count (default 6).
+      .PARAMETER StrictGraph
+          If set, fail immediately if Graph fallback would be required.
+
+      .EXAMPLE
+          PS> .\Export-MailMetadata.ps1 -EmployeeAssignments $employees -OutputFormat CSV -OutputPath .\out.csv
+
+      .NOTES
+          Requires PowerShell 7+, Microsoft.Graph (latest), ExchangeOnlineManagement, PSParseque.
+      #>
+
+
+      [CmdletBinding()]
+
+      param(
+          [Parameter(Mandatory)]
+          [array]$EmployeeAssignments,
+
+          [Parameter()]
+          [ValidateSet("CSV", "SQL", "JSON")]
+          [string]$OutputFormat = "CSV",
+
+          [Parameter()]
+          [string]$OutputPath = $(Join-Path $PWD ("EmailMetadata_{0}_{1}.csv" -f (Get-Date -Format 'yyyyMMdd'), (Get-Date -Format 'HHmmss'))),
+
+          [Parameter()]
+          [string]$SqlConnectionString,
+
+          [Parameter()]
+          [string]$SqlTable,
+
+          [Parameter()]
+          [ValidateRange(1,32)]
+          [int]$ThrottleLimit = 6,
+
+          [Parameter()]
+          [switch]$StrictGraph
+      )
+
+
+      #region LOGGING
+
+      function Write-Log {
+          param(
+              [string]$Message,
+              [string]$Level = "INFO"
+          )
+          $timestamp = (Get-Date).ToString("o")
+          $logline = "[$timestamp][$Level] $Message"
+          if ($Level -eq "ERROR") { Write-Error $logline } else { Write-Host $logline }
+          Add-Content -Path "$OutputPath.log" -Value $logline
+      }
+
+      #endregion
+
+
+      #region MODULES/CONNECTIONS
+
+      function Ensure-Module { param([string]$Name)
+          if (-not (Get-Module -ListAvailable -Name $Name)) {
+              throw "$Name module not found. Install-Module $Name -Scope CurrentUser"
+          }
+      }
+
+      function Ensure-Graph {
+          Ensure-Module -Name 'Microsoft.Graph'
+          if (-not (Get-MgContext)) {
+              try { Graph                 }
+              catch { Write-Log "Graph Auth failed: $($_.Exception.Message)" "ERROR"; throw }
+          }
+      }
+
+      function Ensure-Exchange {
+          Ensure-Module -Name 'ExchangeOnlineManagement'
+          if (-not (Get-PSSession | Where-Object { $_.ConfigurationName -eq "Microsoft.Exchange" })) {
+              try { Exchange             }
+              catch { Write-Log "EXO Auth failed: $($_.Exception.Message)" "ERROR"; throw }
+          }
+      }
+
+      #endregion
+
+
+      #region EMPLOYEE EMAIL RESOLUTION (Graph)
+
+      function Resolve-EmployeeEmails {
+          [CmdletBinding()]
+          param([Parameter(Mandatory)][array]$Assignments)
+
+          Ensure-Graph
+          # Use PSParseque for flexible querying if available, fallback to basic Group-Object
+          $resolved = @()
+          foreach ($group in ($Assignments | Group-Object Name)) {
+              $name = $group.Name
+              $user = Get-MgUser -Filter "displayName eq '$name'" -Property userPrincipalName,displayName -ErrorAction SilentlyContinue | Select-Object -First 1
+              if (-not $user) {
+                  Write-Log "No email found for $name" "ERROR"
+                  continue
+              }
+              foreach ($rec in $group.Group) {
+                  $resolved += [PSCustomObject]@{
+                      Name        = $name
+                      Email       = $user.UserPrincipalName
+                      StartDate   = $rec.StartDate
+                      EndDate     = $rec.EndDate
+                  }
+              }
+          }
+          $resolved
+      }
+
+      #endregion
+
+
+      #region UTILITY, VALIDATION, DEDUPE, CHECKPOINTING
+
+      function Test-EmailAddress($email) { $email -match
+      '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$' }
+
+
+      function Validate-Record ($rec) {
+          if (-not $rec.Email -or -not $rec.Name) { throw "Record missing fields" }
+          if (-not (Test-EmailAddress $rec.Email)) { throw "Invalid email: $($rec.Email)" }
+          if (-not ($rec.StartDate -as [datetime]) -or -not ($rec.EndDate -as [datetime])) { throw "Date parse error: $($rec.Name)" }
+      }
+
+
+      function Deduplicate-Records ([array]$Records) {
+          $keys = @{}
+          foreach ($r in $Records) {
+              $k = "$($r.Email.ToLower())|$($r.StartDate)|$($r.EndDate)"
+              if (-not $keys.ContainsKey($k)) { $keys[$k] = $r }
+          }
+          $keys.Values
+      }
+
+
+      function Initialize-Checkpoint ($File) {
+          if (-not (Test-Path $File)) { @{} | ConvertTo-Json | Set-Content $File }
+      }
+
+      function Get-Checkpoint ($File) {
+          if (Test-Path $File) { try { Get-Content $File | ConvertFrom-Json } catch { @{} } } else { @{} }
+      }
+
+      function Set-Checkpoint ($File, $Obj) {
+          $Obj | ConvertTo-Json -Depth 6 | Set-Content $File
+      }
+
+      #endregion
+
+
+      #region EXTRACTORS
+
+      function Get-GraphMailMetadata {
+          param(
+              [Parameter(Mandatory)][string]$UserPrincipalName,
+              [Parameter(Mandatory)][string]$UserName,
+              [Parameter(Mandatory)][datetime]$StartDate,
+              [Parameter(Mandatory)][datetime]$EndDate,
+              [Parameter()][ref]$StepLog
+          )
+          $out = @(); $top = 250; $url = "users/$UserPrincipalName/messages"
+          $filter = "receivedDateTime ge $($StartDate.ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ')) and receivedDateTime le $($EndDate.ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ'))"
+          $select = "subject,sender,from,toRecipients,ccRecipients,bccRecipients,receivedDateTime,sentDateTime,internetMessageId"
+          try {
+              $resp = Invoke-MgGraphRequest -Uri $url -Method Get -Query @{ '`$filter'=$filter; '`$select'=$select; '`$top'=$top }
+              foreach ($msg in $resp.value) {
+                  $out += [PSCustomObject]@{
+                      UserName     = $UserName
+                      UserPrincipalName = $UserPrincipalName
+                      Subject      = $msg.subject
+                      Sender       = $msg.sender.emailAddress.address
+                      Recipients   = (($msg.toRecipients + $msg.ccRecipients + $msg.bccRecipients | ForEach-Object { $_.emailAddress.address }) -join ';')
+                      SentOrReceived = if ($msg.sentDateTime) {'Sent'} elseif ($msg.receivedDateTime) {'Received'} else {''}
+                      SentDate     = $msg.sentDateTime
+                      ReceivedDate = $msg.receivedDateTime
+                      MessageID    = $msg.internetMessageId
+                  }
+              }
+              $StepLog.Value += "Graph: retrieved $($out.Count) items. "
+          } catch {
+              $StepLog.Value += "Graph error: $($_.Exception.Message) "
+          }
+          $out
+      }
+
+
+      function Get-ExchangeMailMetadata {
+          param(
+              [Parameter(Mandatory)][string]$UserPrincipalName,
+              [Parameter(Mandatory)][string]$UserName,
+              [Parameter(Mandatory)][datetime]$StartDate,
+              [Parameter(Mandatory)][datetime]$EndDate,
+              [Parameter()][ref]$StepLog
+          )
+          $out = @()
+          try {
+              $traces = @(Get-MessageTrace -RecipientAddress $UserPrincipalName -StartDate $StartDate -EndDate $EndDate -PageSize 500)
+              foreach ($msg in $traces) {
+                  $out += [PSCustomObject]@{
+                      UserName     = $UserName
+                      UserPrincipalName = $UserPrincipalName
+                      Subject      = $msg.Subject
+                      Sender       = $msg.SenderAddress
+                      Recipients   = $msg.RecipientAddress
+                      SentOrReceived = $msg.Status
+                      SentDate     = $msg.StartDate
+                      ReceivedDate = $msg.Received
+                      MessageID    = $msg.MessageId
+                  }
+              }
+              $StepLog.Value += "EXO: retrieved $($out.Count) items. "
+          } catch {
+              $StepLog.Value += "EXO error: $($_.Exception.Message) "
+          }
+          $out
+      }
+
+      #endregion
+
+
+      #region OUTPUT
+
+      function Export-MailMetadata {
+          [CmdletBinding()]
+          param(
+              [Parameter(Mandatory)]$Metadata,
+              [Parameter(Mandatory)][ValidateSet('CSV','SQL','JSON')]$Format,
+              [string]$OutputPath,
+              [string]$SqlConnectionString,
+              [string]$SqlTable
+          )
+          switch ($Format) {
+              "CSV"  { $Metadata | Export-Csv -Path $OutputPath -NoTypeInformation -Force }
+              "JSON" { $Metadata | ConvertTo-Json -Depth 6 | Set-Content -Path $OutputPath }
+              "SQL"  {
+                  Ensure-Module -Name 'SqlServer'
+                  foreach ($r in $Metadata) {
+                      $cols = ($r.PSObject.Properties.Name | ForEach-Object { "[$_]" }) -join ','
+                      $vals = $r.PSObject.Properties.Value | ForEach-Object { if ($_ -ne $null) { "'$($_.ToString().Replace("'", "''"))'" } else { 'NULL' } } -join ','
+                      $query = "INSERT INTO $SqlTable ($cols) VALUES ($vals);"
+                      Invoke-Sqlcmd -ConnectionString $SqlConnectionString -Query $query
+                  }
+              }
+          }
+      }
+
+      #endregion
+
+
+      #region MAIN CONTROL
+
+      # Resolve emails for assignments
+
+      $employeeRecords = Resolve-EmployeeEmails -Assignments
+      $EmployeeAssignments
+
+
+      $employeeRecords = Deduplicate-Records $employeeRecords | ForEach-Object {
+      $_ }
+
+      $employeeRecords = $employeeRecords | Where-Object { try { Validate-Record
+      $_; $true } catch { Write-Log $_.Exception.Message "WARN"; $false } }
+
+
+      if (-not $employeeRecords) { Write-Log "No valid records. EXIT." "ERROR";
+      exit 1 }
+
+      # Checkpointing
+
+      $cpFile = "$OutputPath.checkpoint"
+
+      Initialize-Checkpoint $cpFile
+
+      $checkpoint = Get-Checkpoint $cpFile
+
+
+      # Find in-progress
+
+      $pending = @()
+
+      foreach ($rec in $employeeRecords) {
+          $key = "$($rec.Email.ToLowerInvariant())|$($rec.StartDate)|$($rec.EndDate)"
+          if ($checkpoint.$key -eq "complete") { Write-Log "Skip: $($rec.Email) $($rec.StartDate)-$($rec.EndDate)" "DEBUG"; continue }
+          $pending += $rec
+      }
+
+      if (-not $pending) { Write-Log "All done via checkpoint. Exiting." "INFO";
+      exit }
+
+
+      # Determine connection requirements
+
+      $today = [datetime]::Today
+
+      if ($pending | Where-Object { $_.EndDate -eq $today }) { Ensure-Graph }
+
+      if ($pending | Where-Object { $_.EndDate -ne $today }) { Ensure-Exchange }
+
+
+      $metaAll = [System.Collections.Concurrent.ConcurrentBag[object]]::new()
+
+      $sync = [System.Object]::new()
+
+      $script:failList =
+      [System.Collections.Concurrent.ConcurrentBag[object]]::new()
+
+      $progressFile = "$OutputPath.progress"
+
+
+      function Update-ProgressStatus { param($email, $status, $count=0,
+      $note='')
+          $obj = [ordered]@{
+              Email   = $email
+              Status  = $status
+              MetaCount = $count
+              Time    = (Get-Date).ToUniversalTime().ToString("o")
+              Note    = $note
+          }
+          $line = $obj | ConvertTo-Json -Compress
+          Add-Content -Path $progressFile -Value $line
+      }
+
+
+      Write-Log "START extraction ($($pending.Count)) assignments..."
+
+
+      $results = $pending | ForEach-Object -ThrottleLimit $ThrottleLimit
+      -Parallel {
+          param($rec, $OutputFormat, $today, $StrictGraph, $cpFile)
+          $ckey = "$($rec.Email.ToLowerInvariant())|$($rec.StartDate)|$($rec.EndDate)"
+          $stepLog = [ref]""
+          try {
+              $meta = @()
+              if ($rec.EndDate -eq $today) {
+                  try {
+                      $meta = Get-GraphMailMetadata -UserPrincipalName $rec.Email -UserName $rec.Name -StartDate $rec.StartDate -EndDate $rec.EndDate -StepLog $stepLog
+                      if (-not $meta -or $meta.Count -eq 0) {
+                          if ($StrictGraph) { throw "StrictGraph enabled: No Graph data for $($rec.Email)" }
+                          $meta = Get-ExchangeMailMetadata -UserPrincipalName $rec.Email -UserName $rec.Name -StartDate $rec.StartDate -EndDate $rec.EndDate -StepLog $stepLog
+                      }
+                  } catch {
+                      if ($StrictGraph) { throw $_ }
+                      $meta = Get-ExchangeMailMetadata -UserPrincipalName $rec.Email -UserName $rec.Name -StartDate $rec.StartDate -EndDate $rec.EndDate -StepLog $stepLog
+                  }
+              } else {
+                  $meta = Get-ExchangeMailMetadata -UserPrincipalName $rec.Email -UserName $rec.Name -StartDate $rec.StartDate -EndDate $rec.EndDate -StepLog $stepLog
+              }
+              if ($meta.Count -gt 0) {
+                  foreach ($x in $meta) { $using:metaAll.Add($x) }
+                  Update-ProgressStatus $rec.Email "complete" $meta.Count $stepLog.Value
+                  $CP = Get-Checkpoint $cpFile; $CP[$ckey] = "complete"; Set-Checkpoint $cpFile $CP
+              } else {
+                  Update-ProgressStatus $rec.Email "empty" 0 $stepLog.Value
+                  $CP = Get-Checkpoint $cpFile; $CP[$ckey] = "empty"; Set-Checkpoint $cpFile $CP
+              }
+          } catch {
+              Update-ProgressStatus $rec.Email "fail" 0 "$($_.Exception.Message)"
+              $CP = Get-Checkpoint $cpFile; $CP[$ckey] = "fail"; Set-Checkpoint $cpFile $CP
+              $using:script:failList.Add($rec)
+          }
+      } -ArgumentList $OutputFormat, $today, $StrictGraph, $cpFile
+
+
+      $total = $pending.Count
+
+      $done = 0
+
+      Write-Progress -Activity "Exporting Mail Metadata" -Status "0/$total"
+      -PercentComplete 0
+
+      while ($done -lt $total) {
+          if (Test-Path $progressFile) {
+              $pl = Get-Content $progressFile | ForEach-Object { $_ | ConvertFrom-Json }
+              $done = ($pl | Where-Object { $_.Status -in @('complete','empty') }).Count
+          }
+          Write-Progress -Activity "Exporting Mail Metadata" -Status "$done/$total" -PercentComplete ([int](100*$done/$total))
+          Start-Sleep 4
+      }
+
+      Write-Progress -Activity "Exporting Mail Metadata" -Completed
+
+
+      if ($metaAll.Count -gt 0) {
+          Export-MailMetadata -Metadata $metaAll -Format $OutputFormat -OutputPath $OutputPath -SqlConnectionString $SqlConnectionString -SqlTable $SqlTable
+          Write-Log "Exported $($metaAll.Count) rows to $OutputFormat: $OutputPath"
+      } else {
+          Write-Log "No metadata extracted."
+      }
+
+
+      try { Disconnect-ExchangeOnline -Confirm:$false -ErrorAction
+      SilentlyContinue } catch {}
+
+      try { Disconnect-MgGraph -ErrorAction SilentlyContinue } catch {}
+
+
+      Write-Log "SCRIPT END. Check progress & checkpoint files for detail."
+
+      #endregion
+
